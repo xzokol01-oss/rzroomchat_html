@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Chat</title>
+
+<style>
+body{
+margin:0;
+font-family:sans-serif;
+background:#0f1115;
+color:white;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+#top{
+background:#1c1f26;
+padding:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+#nameBox{
+cursor:pointer;
+background:#5865f2;
+padding:5px 10px;
+border-radius:8px;
+}
+
+#chat{
+flex:1;
+overflow:auto;
+padding:10px;
+}
+
+.msg{
+background:#1c1f26;
+padding:10px;
+margin:8px 0;
+border-radius:10px;
+}
+
+#bottom{
+display:flex;
+padding:10px;
+background:#1c1f26;
+gap:10px;
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+border-radius:8px;
+outline:none;
+background:#0f1115;
+color:white;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:8px;
+background:#5865f2;
+color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="top">
+<div>💬 Chat Room</div>
+<div id="nameBox" onclick="changeName()">اسمك: ...</div>
+</div>
+
+<div id="chat"></div>
+
+<div id="bottom">
+<input id="msg" placeholder="اكتب رسالة...">
+<button onclick="send()">ارسال</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+import {
+getDatabase,
+ref,
+push,
+onChildAdded
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
+
+const firebaseConfig = {
+apiKey: "PUT_API_KEY",
+authDomain: "PUT_AUTH",
+databaseURL: "PUT_DB_URL",
+projectId: "PUT_ID",
+storageBucket: "PUT_BUCKET",
+messagingSenderId: "PUT_SENDER",
+appId: "PUT_APPID"
+}
+
+const app = initializeApp(firebaseConfig)
+const db = getDatabase(app)
+
+let name = localStorage.getItem("name")
+
+if(!name){
+name = prompt("اكتب اسمك")
+localStorage.setItem("name", name)
+}
+
+document.getElementById("nameBox").innerText = "اسمك: " + name
+
+window.changeName = function(){
+let newName = prompt("اكتب اسم جديد")
+if(newName){
+name = newName
+localStorage.setItem("name", name)
+document.getElementById("nameBox").innerText = "اسمك: " + name
+}
+}
+
+window.send = function(){
+let msg = document.getElementById("msg")
+if(msg.value.trim() === "") return
+
+push(ref(db,"messages"),{
+name:name,
+text:msg.value
+})
+
+msg.value=""
+}
+
+onChildAdded(ref(db,"messages"),(data)=>{
+let d = data.val()
+
+let div = document.createElement("div")
+div.className="msg"
+div.innerHTML = "<b>"+d.name+"</b><br>"+d.text
+
+document.getElementById("chat").appendChild(div)
+})
+
+</script>
+
+</body>
+</html>
